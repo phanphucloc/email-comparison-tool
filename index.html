@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công Cụ So Sánh Email</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top */
+            min-height: 100vh;
+            padding-top: 40px; /* Add some space from the top */
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 90%;
+            margin-bottom: 40px; /* Space at the bottom */
+        }
+        h1, h2 {
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+        p {
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: #555;
+            font-size: 1.1em;
+        }
+        input[type="file"] {
+            display: block;
+            width: calc(100% - 22px); /* Adjust for padding and border */
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+        input[type="file"]:hover {
+            border-color: #007bff;
+        }
+        textarea {
+            width: calc(100% - 22px); /* Adjust for padding and border */
+            height: 200px;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            resize: vertical;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.95em;
+            line-height: 1.5;
+            transition: border-color 0.3s ease;
+        }
+        textarea:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        button {
+            background-color: #28a745; /* Green for action */
+            color: white;
+            padding: 14px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 500;
+            display: block;
+            width: 100%;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        button:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .result-section {
+            margin-top: 35px;
+            padding: 20px;
+            background-color: #e6f3ff; /* Light blue background for results */
+            border-radius: 10px;
+            border: 1px solid #b3d9ff;
+            display: none; /* Hidden by default */
+        }
+        .result-section h2 {
+            color: #0056b3;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+        #result-count {
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 1.1em;
+        }
+        #result-list {
+            list-style-type: decimal;
+            padding-left: 25px;
+            max-height: 350px; /* Limit height for long lists */
+            overflow-y: auto; /* Enable scrolling */
+            border: 1px solid #cce5ff;
+            border-radius: 8px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            background-color: #ffffff;
+        }
+        #result-list li {
+            padding: 8px 0;
+            border-bottom: 1px dashed #e9ecef;
+            word-wrap: break-word; /* Ensure long emails wrap */
+        }
+        #result-list li:last-child {
+            border-bottom: none;
+        }
+        .error-message {
+            color: #dc3545; /* Red for errors */
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+        .success-message {
+            color: #28a745; /* Green for success */
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Công Cụ So Sánh Email</h1>
+        
+        <p>Tìm các email có trong file CSV nhưng không tồn tại trong danh sách JSON người dùng.</p>
+        
+
+        <div class="input-group">
+            <label for="csvFileInput">1. Tải lên file CSV (danh sách email, mỗi email một dòng):</label>
+            <input type="file" id="csvFileInput" accept=".csv">
+        </div>
+
+        <div class="input-group">
+            <label for="jsonInput">2. Nhập mảng JSON danh sách người dùng (chứa trường "email"):</label>
+            <textarea id="jsonInput" placeholder="Ví dụ:
+[
+  { &quot;id&quot;: &quot;...&quot;, &quot;email&quot;: &quot;drsundevil42@gmail.com&quot;, &quot;name&quot;: &quot;David&quot; },
+  { &quot;id&quot;: &quot;...&quot;, &quot;email&quot;: &quot;heathersk9community@gmail.com&quot;, &quot;name&quot;: &quot;Heather&quot; }
+]"></textarea>
+        </div>
+
+        <button onclick="compareEmails()">So sánh Email</button>
+
+        <div id="status-messages">
+            <p id="error-message" class="error-message"></p>
+            <p id="success-message" class="success-message"></p>
+        </div>
+
+        <div id="result-section" class="result-section">
+            <h2>Kết quả so sánh</h2>
+            <p id="result-count"></p>
+            <ul id="result-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Biến toàn cục để lưu trữ dữ liệu
+        let csvEmails = [];
+        let userEmails = [];
+
+        // Tham chiếu đến các phần tử DOM
+        const csvFileInput = document.getElementById('csvFileInput');
+        const jsonInput = document.getElementById('jsonInput');
+        const resultSection = document.getElementById('result-section');
+        const resultCount = document.getElementById('result-count');
+        const resultList = document.getElementById('result-list');
+        const errorMessageDiv = document.getElementById('error-message');
+        const successMessageDiv = document.getElementById('success-message');
+
+        // Hàm hiển thị thông báo
+        function showMessage(type, message) {
+            clearMessages(); // Xóa thông báo cũ
+            if (type === 'error') {
+                errorMessageDiv.textContent = message;
+                errorMessageDiv.style.display = 'block';
+            } else if (type === 'success') {
+                successMessageDiv.textContent = message;
+                successMessageDiv.style.display = 'block';
+            }
+        }
+
+        // Hàm ẩn tất cả thông báo
+        function clearMessages() {
+            errorMessageDiv.style.display = 'none';
+            successMessageDiv.style.display = 'none';
+        }
+
+        // Xử lý khi file CSV được tải lên
+        csvFileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            clearMessages(); // Xóa thông báo cũ
+            resultSection.style.display = 'none'; // Ẩn kết quả cũ
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const csvContent = e.target.result;
+                    
+                    // --- CẢI TIẾN QUAN TRỌNG TẠI ĐÂY ---
+                    // 1. Thay thế tất cả các ký tự \r bằng \n để chuẩn hóa xuống dòng.
+                    // 2. Sau đó, split('\n') để tách từng email.
+                    // 3. Sử dụng .trim() để loại bỏ mọi khoảng trắng ở đầu/cuối mỗi email (kể cả \n nếu còn).
+                    // 4. Lọc bỏ các chuỗi rỗng hoàn toàn.
+                    csvEmails = csvContent.replace(/\r/g, '\n') // Thay thế tất cả \r bằng \n
+                                          .split('\n')         // Tách theo ký tự xuống dòng đã chuẩn hóa
+                                          .map(email => email.trim()) // Loại bỏ khoảng trắng thừa
+                                          .filter(email => email !== ''); // Lọc bỏ các dòng trống
+                    csvEmails = csvEmails.map(x => x.toLowerCase())
+                    
+                    console.log("Emails từ CSV (sau xử lý):", csvEmails);
+                    if (csvEmails.length > 0) {
+                        showMessage('success', `Đã tải lên ${csvEmails.length} email từ file CSV.`);
+                    } else {
+                        showMessage('error', 'File CSV không chứa địa chỉ email hợp lệ nào.');
+                    }
+                };
+                reader.onerror = () => {
+                    showMessage('error', 'Không thể đọc file CSV. Vui lòng thử lại.');
+                    csvEmails = [];
+                };
+                reader.readAsText(file);
+            } else {
+                csvEmails = [];
+                showMessage('error', 'Chưa có file CSV nào được chọn.');
+            }
+        });
+
+        // Hàm phân tích JSON từ input
+        function parseJsonInput() {
+            const jsonString = jsonInput.value.trim();
+            if (!jsonString) {
+                return []; // Trả về mảng rỗng nếu input trống
+            }
+
+            try {
+                let parsedArray;
+                // Kiểm tra nếu nó có vẻ là một mảng JSON tiêu chuẩn
+                if (jsonString.startsWith('[') && jsonString.endsWith(']')) {
+                    parsedArray = JSON.parse(jsonString);
+                } else {
+                    // Nếu không, cố gắng xử lý trường hợp chuỗi là '{...}', '{...}' hoặc chỉ các đối tượng cách nhau
+                    // Bọc nó trong ngoặc vuông và đảm bảo dấu phẩy giữa các đối tượng nếu thiếu
+                    const cleanedString = `[${jsonString.replace(/}\s*,\s*{/g, '},{')}]`; // Xử lý dấu phẩy giữa các đối tượng
+                    parsedArray = JSON.parse(cleanedString);
+                }
+
+                if (!Array.isArray(parsedArray)) {
+                    throw new Error("Dữ liệu nhập vào không phải là một mảng JSON hợp lệ.");
+                }
+
+                // Lấy ra danh sách email từ mảng đối tượng, lọc bỏ các giá trị không phải email
+                const emails = parsedArray.map(user => user?.email) // Sử dụng optional chaining để an toàn hơn
+                                          .filter(email => typeof email === 'string' && email.trim() !== '');
+                return emails;
+
+            } catch (error) {
+                console.error("Lỗi khi phân tích JSON:", error);
+                showMessage('error', `Lỗi định dạng JSON: ${error.message}. Vui lòng kiểm tra lại cú pháp.`);
+                return null; // Trả về null để báo hiệu lỗi
+            }
+        }
+
+        // Hàm so sánh email chính
+        function compareEmails() {
+            clearMessages(); // Xóa thông báo cũ
+            resultSection.style.display = 'none'; // Ẩn kết quả cũ
+
+            if (csvEmails.length === 0) {
+                showMessage('error', "Vui lòng tải lên file CSV trước khi so sánh.");
+                return;
+            }
+
+            userEmails = parseJsonInput();
+            if (userEmails === null) { // Nếu có lỗi khi parse JSON, hàm parseJsonInput đã hiển thị lỗi
+                return;
+            }
+
+            console.log("Emails từ JSON Input:", userEmails);
+
+            // Chuyển userEmails thành Set để tối ưu việc tìm kiếm (O(1) trung bình)
+            const userEmailSet = new Set(userEmails);
+
+            // Tìm các email có trong csvEmails nhưng không có trong userEmailSet
+            const emailsOnlyInCsv = csvEmails.filter(email => !userEmailSet.has(email));
+
+            displayResults(emailsOnlyInCsv);
+        }
+
+        // Hàm hiển thị kết quả ra giao diện
+        function displayResults(results) {
+            resultList.innerHTML = ''; // Xóa kết quả cũ
+            resultSection.style.display = 'block'; // Hiển thị phần kết quả
+
+            if (results.length === 0) {
+                resultCount.textContent = "Không tìm thấy email nào trong CSV mà không có trong danh sách người dùng.";
+                resultList.innerHTML = '<li>Không có email nào để hiển thị.</li>'; // Thêm placeholder
+            } else {
+                resultCount.textContent = `Tìm thấy ${results.length} email có trong CSV nhưng không có trong danh sách người dùng:`;
+                results.forEach(email => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = email;
+                    resultList.appendChild(listItem);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
