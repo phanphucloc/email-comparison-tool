@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Công Cụ So Sánh Email</title>
+    <title>Công Cụ So Sánh Dữ Liệu Linh Hoạt</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -14,9 +14,9 @@
             color: #333;
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* Align to top */
+            align-items: flex-start;
             min-height: 100vh;
-            padding-top: 40px; /* Add some space from the top */
+            padding-top: 40px;
         }
         .container {
             background-color: #ffffff;
@@ -25,10 +25,10 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             max-width: 800px;
             width: 90%;
-            margin-bottom: 40px; /* Space at the bottom */
+            margin-bottom: 40px;
         }
         h1, h2 {
-            color: #007bff;
+            color: #d9534f; /* Màu đỏ nổi bật cho công cụ linh hoạt */
             text-align: center;
             margin-bottom: 25px;
             font-weight: 700;
@@ -48,9 +48,9 @@
             color: #555;
             font-size: 1.1em;
         }
-        input[type="file"] {
+        input[type="file"], input[type="text"] {
             display: block;
-            width: calc(100% - 22px); /* Adjust for padding and border */
+            width: calc(100% - 22px);
             padding: 10px;
             border: 1px solid #ced4da;
             border-radius: 8px;
@@ -58,11 +58,11 @@
             font-size: 1em;
             transition: border-color 0.3s ease;
         }
-        input[type="file"]:hover {
-            border-color: #007bff;
+        input[type="file"]:hover, input[type="text"]:hover {
+            border-color: #d9534f;
         }
         textarea {
-            width: calc(100% - 22px); /* Adjust for padding and border */
+            width: calc(100% - 22px);
             height: 200px;
             padding: 10px;
             border: 1px solid #ced4da;
@@ -74,12 +74,12 @@
             transition: border-color 0.3s ease;
         }
         textarea:focus {
-            border-color: #007bff;
+            border-color: #d9534f;
             outline: none;
-            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            box-shadow: 0 0 0 0.2rem rgba(217, 83, 79, 0.25);
         }
         button {
-            background-color: #28a745; /* Green for action */
+            background-color: #5cb85c; /* Màu xanh lá cây */
             color: white;
             padding: 14px 25px;
             border: none;
@@ -92,22 +92,19 @@
             transition: background-color 0.3s ease, transform 0.2s ease;
         }
         button:hover {
-            background-color: #218838;
+            background-color: #4cae4c;
             transform: translateY(-2px);
-        }
-        button:active {
-            transform: translateY(0);
         }
         .result-section {
             margin-top: 35px;
             padding: 20px;
-            background-color: #e6f3ff; /* Light blue background for results */
+            background-color: #fff0f0; /* Màu hồng nhạt cho kết quả */
             border-radius: 10px;
-            border: 1px solid #b3d9ff;
-            display: none; /* Hidden by default */
+            border: 1px solid #ebcccc;
+            display: none;
         }
         .result-section h2 {
-            color: #0056b3;
+            color: #d9534f;
             margin-top: 0;
             margin-bottom: 15px;
             font-size: 1.8em;
@@ -121,9 +118,9 @@
         #result-list {
             list-style-type: decimal;
             padding-left: 25px;
-            max-height: 350px; /* Limit height for long lists */
-            overflow-y: auto; /* Enable scrolling */
-            border: 1px solid #cce5ff;
+            max-height: 350px;
+            overflow-y: auto;
+            border: 1px solid #ebcccc;
             border-radius: 8px;
             padding-top: 10px;
             padding-bottom: 10px;
@@ -132,13 +129,13 @@
         #result-list li {
             padding: 8px 0;
             border-bottom: 1px dashed #e9ecef;
-            word-wrap: break-word; /* Ensure long emails wrap */
+            word-wrap: break-word;
         }
         #result-list li:last-child {
             border-bottom: none;
         }
         .error-message {
-            color: #dc3545; /* Red for errors */
+            color: #dc3545;
             background-color: #f8d7da;
             border: 1px solid #f5c6cb;
             padding: 15px;
@@ -149,9 +146,9 @@
             display: none;
         }
         .success-message {
-            color: #28a745; /* Green for success */
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
+            color: #5cb85c; 
+            background-color: #dff0d8;
+            border: 1px solid #d0e9c6;
             padding: 15px;
             border-radius: 8px;
             margin-top: 20px;
@@ -163,26 +160,30 @@
 </head>
 <body>
     <div class="container">
-        <h1>Công Cụ So Sánh Email</h1>
+        <h1>Công Cụ So Sánh Dữ Liệu Linh Hoạt ✨</h1>
         
-        <p>Tìm các email có trong file CSV nhưng không tồn tại trong danh sách JSON người dùng.</p>
-        
+        <p>So sánh các giá trị từ file CSV với các giá trị trong mảng JSON dựa trên tên cột được chỉ định.</p>
 
         <div class="input-group">
-            <label for="csvFileInput">1. Tải lên file CSV (danh sách email, mỗi email một dòng):</label>
+            <label for="csvFileInput">1. Tải lên file CSV (danh sách giá trị để so sánh, mỗi giá trị một dòng):</label>
             <input type="file" id="csvFileInput" accept=".csv">
         </div>
 
         <div class="input-group">
-            <label for="jsonInput">2. Nhập mảng JSON danh sách người dùng (chứa trường "email"):</label>
+            <label for="fieldNameInput">2. Nhập tên cột (Field Name) trong JSON để so sánh và xuất kết quả (Ví dụ: <strong>email</strong> hoặc <strong>username</strong>):</label>
+            <input type="text" id="fieldNameInput" placeholder="Ví dụ: email">
+        </div>
+
+        <div class="input-group">
+            <label for="jsonInput">3. Nhập mảng JSON danh sách người dùng (chứa cột đã nhập ở bước 2):</label>
             <textarea id="jsonInput" placeholder="Ví dụ:
 [
-  { &quot;id&quot;: &quot;...&quot;, &quot;email&quot;: &quot;drsundevil42@gmail.com&quot;, &quot;name&quot;: &quot;David&quot; },
-  { &quot;id&quot;: &quot;...&quot;, &quot;email&quot;: &quot;heathersk9community@gmail.com&quot;, &quot;name&quot;: &quot;Heather&quot; }
+  { &quot;id&quot;: &quot;...&quot;, &quot;email&quot;: &quot;drsundevil42@gmail.com&quot;, ... },
+  { &quot;id&quot;: &quot;...&quot;, &quot;email&quot;: &quot;heathersk9community@gmail.com&quot;, ... }
 ]"></textarea>
         </div>
 
-        <button onclick="compareEmails()">So sánh Email</button>
+        <button onclick="compareData()">So sánh Dữ liệu</button>
 
         <div id="status-messages">
             <p id="error-message" class="error-message"></p>
@@ -198,11 +199,12 @@
 
     <script>
         // Biến toàn cục để lưu trữ dữ liệu
-        let csvEmails = [];
-        let userEmails = [];
+        let csvData = [];
+        let jsonValuesToCompare = [];
 
         // Tham chiếu đến các phần tử DOM
         const csvFileInput = document.getElementById('csvFileInput');
+        const fieldNameInput = document.getElementById('fieldNameInput');
         const jsonInput = document.getElementById('jsonInput');
         const resultSection = document.getElementById('result-section');
         const resultCount = document.getElementById('result-count');
@@ -212,7 +214,7 @@
 
         // Hàm hiển thị thông báo
         function showMessage(type, message) {
-            clearMessages(); // Xóa thông báo cũ
+            clearMessages();
             if (type === 'error') {
                 errorMessageDiv.textContent = message;
                 errorMessageDiv.style.display = 'block';
@@ -231,59 +233,51 @@
         // Xử lý khi file CSV được tải lên
         csvFileInput.addEventListener('change', function(event) {
             const file = event.target.files[0];
-            clearMessages(); // Xóa thông báo cũ
-            resultSection.style.display = 'none'; // Ẩn kết quả cũ
+            clearMessages();
+            resultSection.style.display = 'none';
 
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const csvContent = e.target.result;
                     
-                    // --- CẢI TIẾN QUAN TRỌNG TẠI ĐÂY ---
-                    // 1. Thay thế tất cả các ký tự \r bằng \n để chuẩn hóa xuống dòng.
-                    // 2. Sau đó, split('\n') để tách từng email.
-                    // 3. Sử dụng .trim() để loại bỏ mọi khoảng trắng ở đầu/cuối mỗi email (kể cả \n nếu còn).
-                    // 4. Lọc bỏ các chuỗi rỗng hoàn toàn.
-                    csvEmails = csvContent.replace(/\r/g, '\n') // Thay thế tất cả \r bằng \n
-                                          .split('\n')         // Tách theo ký tự xuống dòng đã chuẩn hóa
-                                          .map(email => email.trim()) // Loại bỏ khoảng trắng thừa
-                                          .filter(email => email !== ''); // Lọc bỏ các dòng trống
-                    csvEmails = csvEmails.map(x => x.toLowerCase())
-                    
-                    console.log("Emails từ CSV (sau xử lý):", csvEmails);
-                    if (csvEmails.length > 0) {
-                        showMessage('success', `Đã tải lên ${csvEmails.length} email từ file CSV.`);
+                    // Chuẩn hóa xuống dòng và tách dữ liệu
+                    csvData = csvContent.replace(/\r/g, '\n')
+                                        .split('\n')
+                                        .map(item => item.trim())
+                                        .filter(item => item !== '');
+
+                    console.log("Dữ liệu từ CSV (sau xử lý):", csvData);
+                    if (csvData.length > 0) {
+                        showMessage('success', `Đã tải lên ${csvData.length} mục dữ liệu từ file CSV.`);
                     } else {
-                        showMessage('error', 'File CSV không chứa địa chỉ email hợp lệ nào.');
+                        showMessage('error', 'File CSV không chứa dữ liệu hợp lệ nào.');
                     }
                 };
                 reader.onerror = () => {
                     showMessage('error', 'Không thể đọc file CSV. Vui lòng thử lại.');
-                    csvEmails = [];
+                    csvData = [];
                 };
                 reader.readAsText(file);
             } else {
-                csvEmails = [];
+                csvData = [];
                 showMessage('error', 'Chưa có file CSV nào được chọn.');
             }
         });
 
         // Hàm phân tích JSON từ input
-        function parseJsonInput() {
+        function parseJsonInput(fieldName) {
             const jsonString = jsonInput.value.trim();
-            if (!jsonString) {
-                return []; // Trả về mảng rỗng nếu input trống
+            if (!jsonString || !fieldName) {
+                return [];
             }
 
             try {
                 let parsedArray;
-                // Kiểm tra nếu nó có vẻ là một mảng JSON tiêu chuẩn
                 if (jsonString.startsWith('[') && jsonString.endsWith(']')) {
                     parsedArray = JSON.parse(jsonString);
                 } else {
-                    // Nếu không, cố gắng xử lý trường hợp chuỗi là '{...}', '{...}' hoặc chỉ các đối tượng cách nhau
-                    // Bọc nó trong ngoặc vuông và đảm bảo dấu phẩy giữa các đối tượng nếu thiếu
-                    const cleanedString = `[${jsonString.replace(/}\s*,\s*{/g, '},{')}]`; // Xử lý dấu phẩy giữa các đối tượng
+                    const cleanedString = `[${jsonString.replace(/}\s*,\s*{/g, '},{')}]`;
                     parsedArray = JSON.parse(cleanedString);
                 }
 
@@ -291,57 +285,73 @@
                     throw new Error("Dữ liệu nhập vào không phải là một mảng JSON hợp lệ.");
                 }
 
-                // Lấy ra danh sách email từ mảng đối tượng, lọc bỏ các giá trị không phải email
-                const emails = parsedArray.map(user => user?.email) // Sử dụng optional chaining để an toàn hơn
-                                          .filter(email => typeof email === 'string' && email.trim() !== '');
-                return emails;
+                // Lấy ra danh sách các giá trị từ cột (field) được chỉ định
+                const values = parsedArray
+                                .map(item => {
+                                    const value = item?.[fieldName];
+                                    return (typeof value === 'string' || typeof value === 'number') ? String(value).trim() : null;
+                                })
+                                .filter(value => value !== null && value !== '');
+                return values;
 
             } catch (error) {
-                console.error("Lỗi khi phân tích JSON:", error);
-                showMessage('error', `Lỗi định dạng JSON: ${error.message}. Vui lòng kiểm tra lại cú pháp.`);
-                return null; // Trả về null để báo hiệu lỗi
+                console.error(`Lỗi khi phân tích JSON hoặc trường "${fieldName}":`, error);
+                showMessage('error', `Lỗi định dạng JSON hoặc tên trường: ${error.message}. Vui lòng kiểm tra lại.`);
+                return null; 
             }
         }
 
-        // Hàm so sánh email chính
-        function compareEmails() {
-            clearMessages(); // Xóa thông báo cũ
-            resultSection.style.display = 'none'; // Ẩn kết quả cũ
+        // Hàm so sánh dữ liệu chính
+        function compareData() {
+            clearMessages();
+            resultSection.style.display = 'none';
 
-            if (csvEmails.length === 0) {
+            const fieldName = fieldNameInput.value.trim();
+            if (!fieldName) {
+                showMessage('error', "Vui lòng nhập tên cột (Field Name) cần so sánh.");
+                return;
+            }
+
+            if (csvData.length === 0) {
                 showMessage('error', "Vui lòng tải lên file CSV trước khi so sánh.");
                 return;
             }
 
-            userEmails = parseJsonInput();
-            if (userEmails === null) { // Nếu có lỗi khi parse JSON, hàm parseJsonInput đã hiển thị lỗi
+            // Lấy dữ liệu từ JSON dựa trên tên cột
+            jsonValuesToCompare = parseJsonInput(fieldName);
+            if (jsonValuesToCompare === null) {
+                return; // Có lỗi JSON đã được hiển thị
+            }
+
+            console.log(`Dữ liệu từ JSON (cột "${fieldName}"):`, jsonValuesToCompare);
+
+            if (jsonValuesToCompare.length === 0 && jsonInput.value.trim()) {
+                showMessage('error', `Không tìm thấy giá trị nào cho cột "${fieldName}" trong JSON đã nhập.`);
                 return;
             }
 
-            console.log("Emails từ JSON Input:", userEmails);
+            // Chuyển JSON values thành Set để tối ưu việc tìm kiếm
+            const jsonValueSet = new Set(jsonValuesToCompare);
 
-            // Chuyển userEmails thành Set để tối ưu việc tìm kiếm (O(1) trung bình)
-            const userEmailSet = new Set(userEmails);
+            // Tìm các giá trị có trong CSV nhưng không có trong JSON
+            const dataOnlyInCsv = csvData.filter(item => !jsonValueSet.has(item));
 
-            // Tìm các email có trong csvEmails nhưng không có trong userEmailSet
-            const emailsOnlyInCsv = csvEmails.filter(email => !userEmailSet.has(email));
-
-            displayResults(emailsOnlyInCsv);
+            displayResults(dataOnlyInCsv, fieldName);
         }
 
         // Hàm hiển thị kết quả ra giao diện
-        function displayResults(results) {
-            resultList.innerHTML = ''; // Xóa kết quả cũ
-            resultSection.style.display = 'block'; // Hiển thị phần kết quả
+        function displayResults(results, fieldName) {
+            resultList.innerHTML = '';
+            resultSection.style.display = 'block';
 
             if (results.length === 0) {
-                resultCount.textContent = "Không tìm thấy email nào trong CSV mà không có trong danh sách người dùng.";
-                resultList.innerHTML = '<li>Không có email nào để hiển thị.</li>'; // Thêm placeholder
+                resultCount.textContent = "✅ Không tìm thấy mục dữ liệu nào trong CSV mà không có trong danh sách JSON.";
+                resultList.innerHTML = '<li>Tất cả các mục CSV đều khớp với các giá trị trong cột "' + fieldName + '" của JSON.</li>';
             } else {
-                resultCount.textContent = `Tìm thấy ${results.length} email có trong CSV nhưng không có trong danh sách người dùng:`;
-                results.forEach(email => {
+                resultCount.textContent = `❌ Tìm thấy ${results.length} mục dữ liệu trong CSV nhưng không có trong cột "${fieldName}" của JSON:`;
+                results.forEach(item => {
                     const listItem = document.createElement('li');
-                    listItem.textContent = email;
+                    listItem.textContent = item;
                     resultList.appendChild(listItem);
                 });
             }
