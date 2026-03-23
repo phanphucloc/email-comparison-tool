@@ -33,6 +33,23 @@
             color: #666;
             margin-bottom: 30px;
         }
+        .global-config {
+            background-color: #e9ecef;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid #6c757d;
+        }
+        .global-config label {
+            display: inline-block;
+            margin-bottom: 0;
+            margin-right: 15px;
+            font-weight: 700;
+        }
+        .global-config input {
+            width: 300px;
+            display: inline-block;
+        }
         .panels-wrapper {
             display: flex;
             gap: 20px;
@@ -74,7 +91,7 @@
             font-family: inherit;
         }
         textarea {
-            height: 120px;
+            height: 150px;
             resize: vertical;
         }
         button.compare-btn {
@@ -91,12 +108,10 @@
         }
         button.compare-btn:hover { background-color: #218838; }
         
-        /* Messages */
         .msg { padding: 15px; border-radius: 6px; margin-top: 20px; display: none; text-align: center; font-weight: 500; }
         .msg.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .msg.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
 
-        /* Results */
         .results-wrapper {
             display: flex;
             gap: 20px;
@@ -118,214 +133,4 @@
         
         .result-list {
             list-style: none; padding: 0; margin: 0;
-            max-height: 300px; overflow-y: auto;
-            background: #fdfdfd; border: 1px solid #eee; border-radius: 4px;
-        }
-        .result-list li {
-            padding: 8px 12px; border-bottom: 1px solid #eee; font-family: monospace;
-        }
-        .result-list li:last-child { border-bottom: none; }
-        .empty-state { color: #28a745; font-weight: bold; padding: 10px 0; }
-
-        @media (max-width: 768px) {
-            .panels-wrapper, .results-wrapper { flex-direction: column; }
-        }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h1>Công Cụ Đối Soát Dữ Liệu 2 Chiều 🔄</h1>
-    <p class="subtitle">Tìm ra sự khác biệt giữa hai tập dữ liệu (Hỗ trợ CSV và JSON)</p>
-
-    <div class="panels-wrapper">
-        <div class="side-panel side-1">
-            <h3>Dữ liệu Bên 1</h3>
-            <div class="input-group">
-                <label>Nguồn dữ liệu:</label>
-                <select id="type-1" onchange="toggleInputs('1')">
-                    <option value="csv-file">Tải lên file CSV</option>
-                    <option value="json-file">Tải lên file JSON</option>
-                    <option value="json-text">Nhập JSON thủ công</option>
-                </select>
-            </div>
-            
-            <div class="input-group" id="file-wrap-1">
-                <label>Chọn File:</label>
-                <input type="file" id="file-1" accept=".csv,.txt,.json">
-            </div>
-
-            <div class="input-group" id="text-wrap-1" style="display: none;">
-                <label>Dán chuỗi JSON:</label>
-                <textarea id="text-1" placeholder='[{"email": "a@gmail.com"}, ...]'></textarea>
-            </div>
-
-            <div class="input-group" id="field-wrap-1" style="display: none;">
-                <label>Tên cột (Field Name) cần lấy:</label>
-                <input type="text" id="field-1" placeholder="VD: email">
-            </div>
-        </div>
-
-        <div class="side-panel side-2">
-            <h3>Dữ liệu Bên 2</h3>
-            <div class="input-group">
-                <label>Nguồn dữ liệu:</label>
-                <select id="type-2" onchange="toggleInputs('2')">
-                    <option value="json-text">Nhập JSON thủ công</option>
-                    <option value="csv-file">Tải lên file CSV</option>
-                    <option value="json-file">Tải lên file JSON</option>
-                </select>
-            </div>
-            
-            <div class="input-group" id="file-wrap-2" style="display: none;">
-                <label>Chọn File:</label>
-                <input type="file" id="file-2" accept=".csv,.txt,.json">
-            </div>
-
-            <div class="input-group" id="text-wrap-2">
-                <label>Dán chuỗi JSON:</label>
-                <textarea id="text-2" placeholder='[{"email": "b@gmail.com"}, ...]'></textarea>
-            </div>
-
-            <div class="input-group" id="field-wrap-2">
-                <label>Tên cột (Field Name) cần lấy:</label>
-                <input type="text" id="field-2" placeholder="VD: email">
-            </div>
-        </div>
-    </div>
-
-    <button class="compare-btn" onclick="executeComparison()">🚀 Tiến Hành So Sánh</button>
-
-    <div id="msg-box" class="msg"></div>
-
-    <div class="results-wrapper" id="results-wrapper">
-        <div class="result-box res-1">
-            <h4>🔵 Có ở Bên 1 nhưng KHÔNG có ở Bên 2 (<span id="count-1">0</span>)</h4>
-            <ul class="result-list" id="list-1"></ul>
-        </div>
-        <div class="result-box res-2">
-            <h4>🔴 Có ở Bên 2 nhưng KHÔNG có ở Bên 1 (<span id="count-2">0</span>)</h4>
-            <ul class="result-list" id="list-2"></ul>
-        </div>
-    </div>
-</div>
-
-<script>
-    // Xử lý ẩn/hiện các ô nhập liệu tùy theo lựa chọn nguồn dữ liệu
-    function toggleInputs(side) {
-        const type = document.getElementById(`type-${side}`).value;
-        const fileWrap = document.getElementById(`file-wrap-${side}`);
-        const textWrap = document.getElementById(`text-wrap-${side}`);
-        const fieldWrap = document.getElementById(`field-wrap-${side}`);
-
-        if (type === 'csv-file') {
-            fileWrap.style.display = 'block';
-            textWrap.style.display = 'none';
-            fieldWrap.style.display = 'none';
-            document.getElementById(`file-${side}`).accept = ".csv,.txt";
-        } else if (type === 'json-file') {
-            fileWrap.style.display = 'block';
-            textWrap.style.display = 'none';
-            fieldWrap.style.display = 'block';
-            document.getElementById(`file-${side}`).accept = ".json";
-        } else if (type === 'json-text') {
-            fileWrap.style.display = 'none';
-            textWrap.style.display = 'block';
-            fieldWrap.style.display = 'block';
-        }
-    }
-
-    // Tiện ích đọc file trả về Promise
-    function readFileAsText(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = e => resolve(e.target.result);
-            reader.onerror = e => reject(e);
-            reader.readAsText(file);
-        });
-    }
-
-    // Xử lý JSON string để lấy ra mảng giá trị dựa trên fieldName
-    function extractFromJson(jsonString, fieldName, sideName) {
-        if (!fieldName) throw new Error(`Vui lòng nhập "Tên cột" cho ${sideName}`);
-        try {
-            // Chống lỗi ngoặc nhọn nếu user dán thiếu dấu ngoặc vuông []
-            let parsedArray;
-            jsonString = jsonString.trim();
-            if (jsonString.startsWith('[') && jsonString.endsWith(']')) {
-                parsedArray = JSON.parse(jsonString);
-            } else {
-                parsedArray = JSON.parse(`[${jsonString.replace(/}\s*,\s*{/g, '},{')}]`);
-            }
-
-            if (!Array.isArray(parsedArray)) throw new Error("JSON không phải là mảng hợp lệ.");
-
-            return parsedArray
-                .map(item => item?.[fieldName])
-                .filter(val => val !== null && val !== undefined && val !== '')
-                .map(val => String(val).trim());
-        } catch (err) {
-            throw new Error(`Lỗi parse JSON ở ${sideName}: ${err.message}`);
-        }
-    }
-
-    // Trích xuất dữ liệu của 1 bên cụ thể thành mảng 1 chiều
-    async function getSideData(side) {
-        const type = document.getElementById(`type-${side}`).value;
-        let dataArray = [];
-        const sideName = `Bên ${side}`;
-
-        if (type === 'csv-file') {
-            const file = document.getElementById(`file-${side}`).files[0];
-            if (!file) throw new Error(`Vui lòng chọn file CSV cho ${sideName}`);
-            const text = await readFileAsText(file);
-            dataArray = text.replace(/\r/g, '\n').split('\n').map(s => s.trim()).filter(s => s !== '');
-            
-        } else if (type === 'json-file') {
-            const file = document.getElementById(`file-${side}`).files[0];
-            const field = document.getElementById(`field-${side}`).value.trim();
-            if (!file) throw new Error(`Vui lòng chọn file JSON cho ${sideName}`);
-            const text = await readFileAsText(file);
-            dataArray = extractFromJson(text, field, sideName);
-
-        } else if (type === 'json-text') {
-            const text = document.getElementById(`text-${side}`).value;
-            const field = document.getElementById(`field-${side}`).value.trim();
-            if (!text) throw new Error(`Vui lòng nhập chuỗi JSON cho ${sideName}`);
-            dataArray = extractFromJson(text, field, sideName);
-        }
-
-        // Loại bỏ các giá trị trùng lặp bên trong chính dữ liệu của bên đó
-        return [...new Set(dataArray)];
-    }
-
-    // Hàm hiển thị thông báo
-    function showMsg(type, text) {
-        const msgBox = document.getElementById('msg-box');
-        msgBox.className = `msg ${type}`;
-        msgBox.textContent = text;
-        msgBox.style.display = 'block';
-    }
-
-    // Hàm render danh sách kết quả
-    function renderList(elementId, countId, data) {
-        const listEl = document.getElementById(elementId);
-        const countEl = document.getElementById(countId);
-        countEl.textContent = data.length;
-        listEl.innerHTML = '';
-
-        if (data.length === 0) {
-            listEl.innerHTML = '<div class="empty-state">✅ Trống (Tất cả dữ liệu đều khớp)</div>';
-            return;
-        }
-
-        data.forEach(item => {
-            const li = document.createElement('li');
-            li.textContent = item;
-            listEl.appendChild(li);
-        });
-    }
-
-    // Hàm thực thi chính
-    async function executeComparison() {
-        document.getElementById
+            max-height: 30
