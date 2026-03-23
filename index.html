@@ -133,4 +133,243 @@
         
         .result-list {
             list-style: none; padding: 0; margin: 0;
-            max-height: 30
+            max-height: 300px; overflow-y: auto;
+            background: #fdfdfd; border: 1px solid #eee; border-radius: 4px;
+        }
+        .result-list li {
+            padding: 8px 12px; border-bottom: 1px solid #eee; font-family: monospace; word-break: break-all;
+        }
+        .result-list li:last-child { border-bottom: none; }
+        .empty-state { color: #28a745; font-weight: bold; padding: 10px 0; }
+
+        @media (max-width: 768px) {
+            .panels-wrapper, .results-wrapper { flex-direction: column; }
+            .global-config input { width: 100%; margin-top: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Công Cụ Đối Soát Dữ Liệu 2 Chiều 🔄</h1>
+    <p class="subtitle">Tìm ra sự khác biệt giữa hai tập dữ liệu (Hỗ trợ CSV và JSON)</p>
+
+    <div class="global-config">
+        <label for="global-field">Tên cột (Field Name) cần lấy từ JSON:</label>
+        <input type="text" id="global-field" placeholder="Ví dụ: email, username...">
+        <div style="font-size: 0.85em; color: #555; margin-top: 5px; font-weight: normal;">*Chỉ bắt buộc nếu bạn chọn nguồn dữ liệu là JSON. Dùng chung cho cả 2 bên.</div>
+    </div>
+
+    <div class="panels-wrapper">
+        <div class="side-panel side-1">
+            <h3>Dữ liệu Bên 1</h3>
+            <div class="input-group">
+                <label>Chọn nguồn dữ liệu:</label>
+                <select id="type-1" onchange="toggleInputs('1')">
+                    <option value="csv-file">Tải lên file CSV</option>
+                    <option value="json-file">Tải lên file JSON</option>
+                    <option value="json-text">Nhập JSON thủ công</option>
+                </select>
+            </div>
+            
+            <div class="input-group" id="file-wrap-1">
+                <label id="file-label-1">Chọn File:</label>
+                <input type="file" id="file-1">
+            </div>
+
+            <div class="input-group" id="text-wrap-1" style="display: none;">
+                <label>Dán chuỗi JSON vào đây:</label>
+                <textarea id="text-1" placeholder='[{"email": "user1@gmail.com"}, {"email": "user2@gmail.com"}]'></textarea>
+            </div>
+        </div>
+
+        <div class="side-panel side-2">
+            <h3>Dữ liệu Bên 2</h3>
+            <div class="input-group">
+                <label>Chọn nguồn dữ liệu:</label>
+                <select id="type-2" onchange="toggleInputs('2')">
+                    <option value="json-text">Nhập JSON thủ công</option>
+                    <option value="csv-file">Tải lên file CSV</option>
+                    <option value="json-file">Tải lên file JSON</option>
+                </select>
+            </div>
+            
+            <div class="input-group" id="file-wrap-2" style="display: none;">
+                <label id="file-label-2">Chọn File:</label>
+                <input type="file" id="file-2">
+            </div>
+
+            <div class="input-group" id="text-wrap-2">
+                <label>Dán chuỗi JSON vào đây:</label>
+                <textarea id="text-2" placeholder='[{"email": "user3@gmail.com"}, {"email": "user1@gmail.com"}]'></textarea>
+            </div>
+        </div>
+    </div>
+
+    <button class="compare-btn" onclick="executeComparison()">🚀 Tiến Hành So Sánh</button>
+
+    <div id="msg-box" class="msg"></div>
+
+    <div class="results-wrapper" id="results-wrapper">
+        <div class="result-box res-1">
+            <h4>🔵 Có ở Bên 1 nhưng KHÔNG có ở Bên 2 (<span id="count-1">0</span>)</h4>
+            <ul class="result-list" id="list-1"></ul>
+        </div>
+        <div class="result-box res-2">
+            <h4>🔴 Có ở Bên 2 nhưng KHÔNG có ở Bên 1 (<span id="count-2">0</span>)</h4>
+            <ul class="result-list" id="list-2"></ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Hàm xử lý ẩn/hiện input dựa trên dropdown
+    function toggleInputs(side) {
+        const type = document.getElementById(`type-${side}`).value;
+        const fileWrap = document.getElementById(`file-wrap-${side}`);
+        const textWrap = document.getElementById(`text-wrap-${side}`);
+        const fileInput = document.getElementById(`file-${side}`);
+
+        if (type === 'csv-file') {
+            fileWrap.style.display = 'block';
+            textWrap.style.display = 'none';
+            fileInput.accept = ".csv,.txt";
+        } else if (type === 'json-file') {
+            fileWrap.style.display = 'block';
+            textWrap.style.display = 'none';
+            fileInput.accept = ".json";
+        } else if (type === 'json-text') {
+            fileWrap.style.display = 'none';
+            textWrap.style.display = 'block';
+        }
+    }
+
+    // Tiện ích đọc file trả về Promise
+    function readFileAsText(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = e => resolve(e.target.result);
+            reader.onerror = e => reject(e);
+            reader.readAsText(file);
+        });
+    }
+
+    // Xử lý chuỗi JSON
+    function extractFromJson(jsonString, fieldName, sideName) {
+        if (!fieldName) throw new Error(`Bạn đang dùng dữ liệu JSON ở ${sideName}, vui lòng nhập "Tên cột (Field Name)" ở Cấu hình chung.`);
+        try {
+            let parsedArray;
+            jsonString = jsonString.trim();
+            if (!jsonString) return []; // Trả về mảng rỗng nếu không nhập gì
+
+            if (jsonString.startsWith('[') && jsonString.endsWith(']')) {
+                parsedArray = JSON.parse(jsonString);
+            } else {
+                parsedArray = JSON.parse(`[${jsonString.replace(/}\s*,\s*{/g, '},{')}]`);
+            }
+
+            if (!Array.isArray(parsedArray)) throw new Error("Dữ liệu không phải là mảng JSON hợp lệ.");
+
+            return parsedArray
+                .map(item => item?.[fieldName])
+                .filter(val => val !== null && val !== undefined && val !== '')
+                .map(val => String(val).trim());
+        } catch (err) {
+            throw new Error(`Lỗi phân tích JSON ở ${sideName}: ${err.message}`);
+        }
+    }
+
+    // Lấy dữ liệu từ từng bên
+    async function getSideData(side) {
+        const type = document.getElementById(`type-${side}`).value;
+        const globalField = document.getElementById('global-field').value.trim();
+        let dataArray = [];
+        const sideName = `Bên ${side}`;
+
+        if (type === 'csv-file') {
+            const file = document.getElementById(`file-${side}`).files[0];
+            if (!file) throw new Error(`Vui lòng chọn file CSV cho ${sideName}`);
+            const text = await readFileAsText(file);
+            dataArray = text.replace(/\r/g, '\n').split('\n').map(s => s.trim()).filter(s => s !== '');
+            
+        } else if (type === 'json-file') {
+            const file = document.getElementById(`file-${side}`).files[0];
+            if (!file) throw new Error(`Vui lòng chọn file JSON cho ${sideName}`);
+            const text = await readFileAsText(file);
+            dataArray = extractFromJson(text, globalField, sideName);
+
+        } else if (type === 'json-text') {
+            const text = document.getElementById(`text-${side}`).value;
+            if (!text.trim()) throw new Error(`Vui lòng dán chuỗi JSON cho ${sideName}`);
+            dataArray = extractFromJson(text, globalField, sideName);
+        }
+
+        return [...new Set(dataArray)]; // Xóa trùng lặp trong chính nó
+    }
+
+    // Hiển thị thông báo
+    function showMsg(type, text) {
+        const msgBox = document.getElementById('msg-box');
+        msgBox.className = `msg ${type}`;
+        msgBox.textContent = text;
+        msgBox.style.display = 'block';
+    }
+
+    // Render danh sách kết quả
+    function renderList(elementId, countId, data) {
+        const listEl = document.getElementById(elementId);
+        const countEl = document.getElementById(countId);
+        countEl.textContent = data.length;
+        listEl.innerHTML = '';
+
+        if (data.length === 0) {
+            listEl.innerHTML = '<div class="empty-state">✅ Trống (Không có sự khác biệt)</div>';
+            return;
+        }
+
+        data.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            listEl.appendChild(li);
+        });
+    }
+
+    // Hàm thực thi so sánh
+    async function executeComparison() {
+        document.getElementById('msg-box').style.display = 'none';
+        document.getElementById('results-wrapper').style.display = 'none';
+
+        try {
+            const data1 = await getSideData('1');
+            const data2 = await getSideData('2');
+
+            if (data1.length === 0 && data2.length === 0) {
+                throw new Error("Cả 2 nguồn dữ liệu đều đang trống hoặc không trích xuất được giá trị nào!");
+            }
+
+            const set1 = new Set(data1);
+            const set2 = new Set(data2);
+
+            const in1Not2 = data1.filter(item => !set2.has(item));
+            const in2Not1 = data2.filter(item => !set1.has(item));
+
+            renderList('list-1', 'count-1', in1Not2);
+            renderList('list-2', 'count-2', in2Not1);
+
+            document.getElementById('results-wrapper').style.display = 'flex';
+            showMsg('success', '✅ So sánh hoàn tất!');
+
+        } catch (error) {
+            console.error(error);
+            showMsg('error', '❌ ' + error.message);
+        }
+    }
+
+    // Khởi tạo trạng thái ban đầu
+    window.onload = function() {
+        toggleInputs('1');
+        toggleInputs('2');
+    };
+</script>
+</body>
+</html>
