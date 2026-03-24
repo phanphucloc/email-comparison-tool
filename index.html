@@ -204,18 +204,59 @@
     }
 
     function parseCSV(csvText, fieldName) {
+        // Tách dòng và loại bỏ dòng trống
         const lines = csvText.replace(/\r/g, '').split('\n').filter(l => l.trim() !== '');
         if (lines.length === 0) return [];
+
+        // Trình phân tích dòng CSV thông minh (Bỏ ngoặc kép, xử lý dấu phẩy bên trong chuỗi)
+        function parseLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"' && line[i+1] === '"') {
+                    // Xử lý dấu ngoặc kép kép (escape quote)
+                    current += '"';
+                    i++;
+                } else if (char === '"') {
+                    // Bật/tắt trạng thái đang ở trong ngoặc kép
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    // Chỉ cắt cột khi gặp dấu phẩy VÀ KHÔNG nằm trong ngoặc kép
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current);
+            // Xóa khoảng trắng thừa ở 2 đầu của mỗi giá trị
+            return result.map(val => val.trim());
+        }
+
         if (lines[0].includes(',')) {
-            const headers = lines[0].split(',').map(h => h.trim());
+            // Đọc dòng Header
+            const headers = parseLine(lines[0]);
+            
             return lines.slice(1).map(line => {
-                const values = line.split(',');
+                const values = parseLine(line);
                 let obj = {};
-                headers.forEach((h, i) => { obj[h] = values[i] ? values[i].trim() : ''; });
+                headers.forEach((h, i) => { 
+                    obj[h] = values[i] !== undefined ? values[i] : ''; 
+                });
                 return obj;
             });
         } else {
-            return lines.map(line => ({ [fieldName]: line.trim() }));
+            // Xử lý file CSV chỉ có 1 cột (Flat file)
+            return lines.map(line => {
+                let val = line.trim();
+                if(val.startsWith('"') && val.endsWith('"')) {
+                    val = val.substring(1, val.length - 1);
+                }
+                return { [fieldName]: val };
+            });
         }
     }
 
